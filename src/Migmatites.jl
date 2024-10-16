@@ -1,8 +1,12 @@
 module Migmatites
 
+export
+    get_melt,
+    equilibrate_open_system
+
 using
     DocStringExtensions,
-    JPerplex,
+    JPerpleX,
     PetroBase
 
 #Function that takes a PetroSystem and calculates u_H2O for given P-T-X_H2O conditions
@@ -45,7 +49,9 @@ $(TYPEDSIGNATURES)
 This is a two step function which calculates the system and phase properties of the melt source rock at 'source_T' and
 'source_P', then use the chemical potential of `equilib_component` to calculate the system and phase properties of
 the host rock at `host_T` and `host_P`. If `meltsource_compo` or `host_compo` are not provided, it will default to
-the compositions defined in the given dat files: `meltsourcefile` and `hostfile`
+the compositions defined in the given dat files: `meltsourcefile` and `hostfile`. For this function to work as expected
+your meltsourcefile must have only P and T as independent variables, and your hostfile must have P, T and μ of 
+one component as independent variables.
 """
 function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, host_T,host_P;meltsource_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
 
@@ -64,8 +70,8 @@ function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, hos
         println("No melt generated at ",source_T," °C and ", source_P, " bar" )
         return
     end
-    μ = melt.composition[findchemical(melt.composition,equilib_component)]
-       
+    μ = melt.composition[findchemical(melt.composition,equilib_component)].μ
+    @show μ
     hcomp = init_meemum(hostfile)
 
     if !isnothing(host_compo)
@@ -74,7 +80,7 @@ function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, hos
 
     host_system = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
 
-    return host_system, melt_system
+    return melt_system, host_system
 
 end
 
