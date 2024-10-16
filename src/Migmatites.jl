@@ -62,16 +62,19 @@ function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, hos
     if !isnothing(meltsource_compo)
         mscomp = meltsource_compo
     end
-    melt_system = minimizepoint(mscomp,source_T,source_P,suppresswarn=suppresswarn)
+    source_system = minimizepoint(mscomp,source_T,source_P,suppresswarn=suppresswarn)
     melt = Phase(name="melt",composition = Component[])
     try
-        melt = get_melt(melt_system)
+        melt = get_melt(source_system)
     catch
         println("No melt generated at ",source_T," °C and ", source_P, " bar" )
         return
     end
-    μ = melt.composition[findchemical(melt.composition,equilib_component)].μ
-    @show μ
+    #Have to calculate melt conditions at host T and P
+    melt_system = minimizepoint(melt.composition,host_T,host_P,suppresswarn=suppresswarn)
+
+    μ = melt_system.composition[findchemical(melt.composition,equilib_component)].μ
+    
     hcomp = init_meemum(hostfile)
 
     if !isnothing(host_compo)
@@ -80,7 +83,7 @@ function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, hos
 
     host_system = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
 
-    return melt_system, host_system
+    return source_system,melt_system, host_system
 
 end
 
