@@ -2,7 +2,7 @@
 
 julia_version = "1.11.0"
 manifest_format = "2.0"
-project_hash = "334d1b5711d971c07e2a5cb160f0555928563fd0"
+project_hash = "0d4d586e840a5326754911ccbaa9df91cbe424f6"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -805,6 +805,12 @@ deps = ["Artifacts", "Libdl"]
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
 
+[[deps.Migmatites]]
+deps = ["DocStringExtensions", "JPerpleX", "PetroBase"]
+path = ".."
+uuid = "5167f344-0b18-48b9-9d08-769aea2eb5e3"
+version = "0.0.1"
+
 [[deps.Missings]]
 deps = ["DataAPI"]
 git-tree-sha1 = "ec4f7fbeab05d7747bdf98eb74d130a2a2ed298d"
@@ -949,9 +955,9 @@ version = "2.8.1"
 
 [[deps.PetroBase]]
 deps = ["DocStringExtensions"]
-git-tree-sha1 = "057d999d2c661ac8ff89a56ce5673b713e590724"
+git-tree-sha1 = "35563fb7d1e4b5d37d2915c94cb7b161806e0b03"
 uuid = "b72d3798-c150-44c4-b6d4-c983c975f217"
-version = "1.1.0"
+version = "1.2.2"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]

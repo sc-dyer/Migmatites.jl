@@ -6,8 +6,7 @@ export
 
 using
     DocStringExtensions,
-    JPerpleX,
-    PetroBase
+    JPerpleX
 
 #Function that takes a PetroSystem and calculates u_H2O for given P-T-X_H2O conditions
 
@@ -32,7 +31,8 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Returns the melt phase in a 'PetroSystem' if one exists, throws an error if it does not
+Returns the melt phase in a 'PetroSystem' if one exists, returns an empty phase with 0 mols of every component
+if no melt exists
 """
 function get_melt(system)
     for phase in system.phases
@@ -40,7 +40,7 @@ function get_melt(system)
             return phase
         end
     end
-    throw(ErrorException("System does not contain melt"))
+    return Phase(name="Melt",composition = zero.(system.composition))
 end
 
 """
@@ -48,32 +48,33 @@ $(TYPEDSIGNATURES)
 
 This is a two step function which calculates the system and phase properties of the melt source rock at 'source_T' and
 'source_P', then use the chemical potential of `equilib_component` to calculate the system and phase properties of
-the host rock at `host_T` and `host_P`. If `meltsource_compo` or `host_compo` are not provided, it will default to
-the compositions defined in the given dat files: `meltsourcefile` and `hostfile`. For this function to work as expected
-your meltsourcefile must have only P and T as independent variables, and your hostfile must have P, T and μ of 
+the host rock at `host_T` and `host_P`. If `source_compo` or `host_compo` are not provided, it will default to
+the compositions defined in the given dat files: `sourcefile` and `hostfile`. For this function to work as expected
+your sourcefile must have only P and T as independent variables, and your hostfile must have P, T and μ of 
 one component as independent variables.
 """
-function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, host_T,host_P;meltsource_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
+function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
+    #Should define another function for multiple compositions at source
+    #So that init_meemum does not need to be run a billion times
 
     #Need to run these in sequence,first calc melt system at T and P
     #Then get uH2O from that melt and calc host system for given uH2O
     #Complicated by how datafiles are defined
-    mscomp = init_meemum(meltsourcefile)
-    if !isnothing(meltsource_compo)
-        mscomp = meltsource_compo
+    mscomp = init_meemum(sourcefile)
+    if !isnothing(source_compo)
+        mscomp = source_compo
     end
     source_system = minimizepoint(mscomp,source_T,source_P,suppresswarn=suppresswarn)
-    melt = Phase(name="melt",composition = Component[])
-    try
-        melt = get_melt(source_system)
-    catch
+   
+    melt = get_melt(source_system)
+    if mol(melt) ≈ 0
         println("No melt generated at ",source_T," °C and ", source_P, " bar" )
         return
     end
     #Have to calculate melt conditions at host T and P
     melt_system = minimizepoint(melt.composition,host_T,host_P,suppresswarn=suppresswarn)
 
-    μ = melt_system.composition[findchemical(melt.composition,equilib_component)].μ
+    μ = melt_system.composition[findchemical(melt_system.composition,equilib_component)].μ
     
     hcomp = init_meemum(hostfile)
 
@@ -87,6 +88,55 @@ function equilibrate_open_system(meltsourcefile, hostfile,source_T,source_P, hos
 
 end
 
+function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+    #Should define another function for multiple compositions at source
+    #So that init_meemum does not need to be run a billion times
+    
+    #Need to run these in sequence,first calc melt system at T and P
+    #Then get uH2O from that melt and calc host system for given uH2O
+    #Complicated by how datafiles are defined
+    filecompo = init_meemum(sourcefile)
 
+    source_compo_range = range(source_compo_start,source_compo_end,steps)
+    source_systems = PetroSystem[]
+    melt_systems = PetroSystem[]
+    for compo in source_compo_range
+        ssys= minimizepoint(compo,source_T,source_P,suppresswarn=suppresswarn)
+        push!(source_systems, ssys)
+        melt = get_melt(ssys)
+        if mol(melt) ≈ 0
+            println("No melt generated at ",source_T," °C and ", source_P, " bar with composition: ", compo)
+            #Done to maintain array shapes
+            push!(melt_systems,PetroSystem())
+
+        else
+            meltcompo = filter(cmp-> !(concentration(cmp) ≈ 0), melt.composition)
+           
+            msys = minimizepoint(meltcompo,host_T,host_P,suppresswarn=suppresswarn)
+            push!(melt_systems,msys)
+        end
+    end
+    
+    #Have to calculate melt conditions at host T and P
+    hcomp = init_meemum(hostfile)
+    if !isnothing(host_compo)
+        hcomp = host_compo
+    end
+    host_systems = PetroSystem[]
+    for msys in melt_systems
+       
+        if length(msys.composition) > 0
+            μ = msys.composition[findchemical(msys.composition,equilib_component)].μ
+            hsys = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
+            push!(host_systems,hsys)
+        else
+            push!(host_systems,PetroSystem())
+        end
+
+    end
+
+    return source_systems,melt_systems, host_systems
+
+end
 
 end
