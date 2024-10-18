@@ -53,7 +53,7 @@ the compositions defined in the given dat files: `sourcefile` and `hostfile`. Fo
 your sourcefile must have only P and T as independent variables, and your hostfile must have P, T and μ of 
 one component as independent variables.
 """
-function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
+function equilibrate_open_system(sourcefile,meltfile,hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
 
@@ -71,7 +71,10 @@ function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,
         println("No melt generated at ",source_T," °C and ", source_P, " bar" )
         return
     end
+
+
     #Have to calculate melt conditions at host T and P
+    init_meemum(meltfile)
     melt_system = minimizepoint(melt.composition,host_T,host_P,suppresswarn=suppresswarn)
 
     μ = melt_system.composition[findchemical(melt_system.composition,equilib_component)].μ
@@ -81,14 +84,14 @@ function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,
     if !isnothing(host_compo)
         hcomp = host_compo
     end
-
+    @show μ
     host_system = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
 
     return source_system,melt_system, host_system
 
 end
 
-function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
     
@@ -148,7 +151,7 @@ end
 
 
 
-function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
     
@@ -189,7 +192,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, sour
     for msys in melt_systems
        
         if length(msys.composition) > 0
-            μ = msys.composition[findchemical(msys.composition,equilib_component)].μ
+            μ = getchemical(msys,equilib_component).μ
             hsys = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
             push!(host_systems,hsys)
         else
