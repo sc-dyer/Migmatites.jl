@@ -7,33 +7,69 @@ using JPerpleX
 @testset "Migmatites.jl" begin
     # Write your tests here.
     source_compo = init_meemum("23SD20A_melt-test1/MeltSource")
-    h2ostart = 0.0001
-    h2oend = 20.0
+    h2ostart = 0.0
+    h2oend = 1.0
 
     
     source_compo1 = change_list_component(source_compo,h2ostart,"H2O")
     source_compo2 = change_list_component(source_compo,h2oend,"H2O")
+    @show source_compo1
+    sources, melts, hosts = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Host",875,10000,875,10000,source_compo1,source_compo2, steps =10)
 
-    sources, melts, hosts = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Host",875,10000,800,9000,source_compo1,source_compo2)
-
-  
-
+   
+    # T_start = 850
+    # T_end = 950
+    # sources, melts, hosts = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Host",T_start,T_end,10000,800,9000)
+    
     host_melt_percent = Float64[]
-    # for compo in source_compo_range
-    #     source,melt, host = equilibrate_open_system.("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Host",875,10000,800,9000,source_compo = compo,suppresswarn=true)
-    #     host_melt = Phase(name="melt",composition = Component[])
-    #     try
-    #         host_melt = get_melt(host)
-    #     catch
-    #         push!(host_melt_percent,0.0)
-    #     else
-    #         push!(host_melt_percent,host_melt.vol/host.vol*100)
-    #     end
-    # end
+    hostH2O = Float64[]
     for host in hosts 
         host_melt = get_melt(host)
         push!(host_melt_percent,host_melt.vol/host.vol*100)
+        h2oindex = findchemical(host.composition,"H2O")
+        if h2oindex > 0
+            push!(hostH2O,concentration(host.composition[h2oindex]))
+        else
+            push!(hostH2O,0)
+        end
     end
+
     @show range(h2ostart,h2oend,length=100)
+    # @show range(T_start,T_end,length=100)
     @show host_melt_percent
+    @show hostH2O
+
+    meltH2O = Float64[]
+    meltuh2o = Float64[]
+    
+    for melt in melts
+        h2oindex = findchemical(melt.composition,"H2O")
+        if h2oindex > 0
+            push!(meltH2O,concentration(melt.composition[h2oindex]))
+            push!(meltuh2o,melt.composition[h2oindex].μ)
+        else
+            push!(meltH2O,0)
+            push!(meltuh2o,0)
+        end
+    end
+
+    @show meltH2O
+    @show meltuh2o
+
+    source_melt_percent = Float64[]
+    sourceH2O = Float64[]
+    for source in sources
+        source_melt = get_melt(source)
+        push!(source_melt_percent, source_melt.vol/source.vol*100)
+        h2oindex = findchemical(source.composition,"H2O")
+        if h2oindex > 0
+            push!(sourceH2O,concentration(source.composition[h2oindex]))
+        else
+            push!(sourceH2O,0)
+        end
+    end
+
+   
+    @show source_melt_percent
+    @show sourceH2O
 end
