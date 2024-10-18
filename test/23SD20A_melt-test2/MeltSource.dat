@@ -34,7 +34,7 @@ CaO   1  2.44288      2.44288      0.00000     molar amount
 Na2O  1  2.98545      2.98545      0.00000     molar amount
 K2O   1  4.13531      4.13531      0.00000     molar amount
 TiO2  1 0.537338     0.537338      0.00000     molar amount
-H2O   1 1.00000       1.00000      0.00000     molar amount
+H2O   1 50.00000       50.00000      0.00000     molar amount
 O2    1 0.422828     0.422828      0.00000     molar amount
 end thermodynamic component list
 

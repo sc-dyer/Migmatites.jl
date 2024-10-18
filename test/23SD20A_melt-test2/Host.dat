@@ -1,10 +1,10 @@
 hp633verD.dat     thermodynamic data file                                                                                                   
-print    | no_print suppresses print output
+print | print generates print output
 plot     | obsolete 6.8.4+
 solution_model.dat     | solution model file, blank = none                                                                                                                                                                                                      
-23SD20A                                                                                                                                                                                                                                                      
+23SD20A_uH2O                                                                                                                                                                                                                                                    
 perplex_option.dat     | Perple_X option file                                                                                                                                                                                                                   
-    5 calculation type: 0- composition, 1- Schreinemakers, 3- Mixed, 4- swash, 5- gridded min, 7- 1d fract, 8- gwash, 9- 2d fract, 10- 7 w/file input, 11- 9 w/file input, 12- 0d infiltration
+    5 calculation type: 0- composition, 1- Schreinemakers, 2 - liquidus/solidus, 3- Mixed, 5- gridded min, 7- 1d fract, 8- gwash, 9- 2d fract, 10- 7 w/file input, 11- 9 w/file input, 12- 0d infiltration
     0 unused place holder, post 06
     0 unused place holder, post 06
     0 unused place holder, post 06
@@ -26,16 +26,15 @@ perplex_option.dat     | Perple_X option file
  0.00000      0.00000      0.00000      0.00000      0.00000     Geothermal gradient polynomial coeffs.
 
 begin thermodynamic component list
-SiO2  1  73.9801      73.9801      0.00000     molar amount
-Al2O3 1  8.89559      8.89559      0.00000     molar amount
-FeO   1  3.67942      3.67942      0.00000     molar amount
-MgO   1  1.06316      1.06316      0.00000     molar amount
-CaO   1  2.44288      2.44288      0.00000     molar amount
-Na2O  1  2.98545      2.98545      0.00000     molar amount
-K2O   1  4.13531      4.13531      0.00000     molar amount
-TiO2  1 0.537338     0.537338      0.00000     molar amount
-H2O   1 1.00000       1.00000      0.00000     molar amount
-O2    1 0.422828     0.422828      0.00000     molar amount
+SiO2  1  73.9801      0.00000      0.00000     molar amount
+Al2O3 1  8.89559      0.00000      0.00000     molar amount
+FeO   1  3.67942      0.00000      0.00000     molar amount
+MgO   1  1.06316      0.00000      0.00000     molar amount
+CaO   1  2.44288      0.00000      0.00000     molar amount
+Na2O  1  2.98545      0.00000      0.00000     molar amount
+K2O   1  4.13531      0.00000      0.00000     molar amount
+TiO2  1 0.537338      0.00000      0.00000     molar amount
+O2    1 0.422828      0.00000      0.00000     molar amount
 end thermodynamic component list
 
 
@@ -48,37 +47,38 @@ end saturated phase component list
 
 
 begin independent potential/fugacity/activity list
+H2O   mu_H2O           
 end independent potential list
 
 
-begin excluded phase list  
+begin excluded phase list
 ilm     
 ilm_nol 
 hem_nol 
-hem       
-andr
+hem     
+andr    
 end excluded phase list
 
 
 begin solution phase list
 cAmph(G)  
-Mica(W)
-Ep(HP11)
-Chl(W)
+Mica(W)   
+Ep(HP11)  
+Chl(W)    
 Augite(G) 
-melt(G)     
-Opx(W)            
+melt(G)   
+Opx(W)    
 Ilm(DS6)  
-Sp(WPC)
-Bi(W)
-O(HP)
-Gt(W)
-Fsp(C1)
+Sp(WPC)   
+Bi(W)     
+O(HP)     
+Gt(W)     
+Fsp(C1)   
 end solution phase list
 
-   14000.00        1223.00        0.00000        0.00000        0.00000     max p, t, xco2, mu_1, mu_2
-   2000.00        723.000        0.00000        0.00000        0.00000     min p, t, xco2, mu_1, mu_2
+   9000.00        1223.00        0.00000       -315000.        0.00000     max p, t, xco2, mu_1, mu_2
+   9000.00        923.000        0.00000       -325000.        0.00000     min p, t, xco2, mu_1, mu_2
    0.00000        0.00000        0.00000        0.00000        0.00000     unused place holder post 06
 
- 2  1  4  5  3   indices of 1st & 2nd independent & sectioning variables
+ 4  2  1  5  3   indices of 1st & 2nd independent & sectioning variables
 
