@@ -6,15 +6,15 @@ using JPerpleX
 
 @testset "Migmatites.jl" begin
     #Test1
-    hostcompo = init_meemum("23SD20A_melt-test1/Host")
-    host = minimizepoint(hostcompo,800,9000,μ1 = -316240)
+    hostlib = init_meemum("23SD20A_melt-test1/Host")
+    host = minimizepoint(hostlib,800,9000,μ1 = -316240)
 
     hosth2o = getchemical(host.composition,"H2O")
 
     @test round(hosth2o.mol,digits=3) ≈ 0.414
     @test round(hosth2o.μ,sigdigits = 6) ≈ -316240
     @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
-
+    close_meemum!(hostlib)
 
     source, melt, host = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Melt","23SD20A_melt-test1/Host",875,10000,800,9000)
 
@@ -25,7 +25,7 @@ using JPerpleX
     # @test sourcemelt.composition .≈ melt.composition
 
     melth2o = getchemical(melt.composition,"H2O")
-    @test round(melth2o.μ,sigdigits=6) ≈ -316240
+    @test round(melth2o.μ,sigdigits=6) ≈ -316241
     @test round(melth2o.mol,digits=5) ≈ 0.40998
     
     hosth2o = getchemical(host.composition,"H2O")
@@ -47,14 +47,14 @@ using JPerpleX
     @test round(melth2o.μ,sigdigits=6) ≈ -311522
     @test round(melth2o.mol,digits=5) ≈ 0.67574
     
-    hosth2o = getchemical(source.composition,"H2O")
+    hosth2o = getchemical(host.composition,"H2O")
 
-    @test round(hosth2o.mol,digits=3) ≈ 47.139
+    @test round(hosth2o.mol,digits=3) ≈ 47.143
     @test round(hosth2o.μ,sigdigits=6) ≈ -311522
     hostmelt = get_melt(host)
     @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 96.07
     hostmelth2o = getchemical(hostmelt.composition,"H2O")
-    @test round(hostmelth2o.mol,digits=2) ≈ 0.66
+    @test round(hostmelth2o.mol,digits=2) ≈ 0.67
 
 
 

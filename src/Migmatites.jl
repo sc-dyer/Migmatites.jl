@@ -60,11 +60,12 @@ function equilibrate_open_system(sourcefile,meltfile,hostfile,source_T,source_P,
     #Need to run these in sequence,first calc melt system at T and P
     #Then get uH2O from that melt and calc host system for given uH2O
     #Complicated by how datafiles are defined
-    scomp = init_meemum(sourcefile)
+    sourcelib = init_meemum(sourcefile)
+    scomp = getcompo(sourcelib)
     if !isnothing(source_compo)
         scomp = source_compo
     end
-    source_system = minimizepoint(scomp,source_T,source_P,suppresswarn=suppresswarn)
+    source_system = minimizepoint(sourcelib,source_T,source_P,suppresswarn=suppresswarn, composition = scomp)
    
     melt = get_melt(source_system)
     if mol(melt) ≈ 0
@@ -72,21 +73,24 @@ function equilibrate_open_system(sourcefile,meltfile,hostfile,source_T,source_P,
         return
     end
 
-
+    close_meemum!(sourcelib)
     #Have to calculate melt conditions at host T and P
-    init_meemum(meltfile)
-    melt_system = minimizepoint(melt.composition,host_T,host_P,suppresswarn=suppresswarn)
+    meltlib = init_meemum(meltfile)
+    melt_system = minimizepoint(meltlib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
 
     μ = melt_system.composition[findchemical(melt_system.composition,equilib_component)].μ
     
-    hcomp = init_meemum(hostfile)
+    close_meemum!(meltlib)
 
+    hostlib = init_meemum(hostfile)
+    hcomp = getcompo(hostlib)
     if !isnothing(host_compo)
         hcomp = host_compo
     end
     @show μ
-    host_system = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
+    host_system = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp)
 
+    close_meemum!(hostlib)
     return source_system,melt_system, host_system
 
 end
