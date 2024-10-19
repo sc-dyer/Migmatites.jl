@@ -604,7 +604,7 @@ uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
 version = "1.6.1"
 
 [[deps.JPerpleX]]
-deps = ["ColorSchemes", "DataFrames", "DocStringExtensions", "PetroBase", "Reexport", "Statistics"]
+deps = ["ColorSchemes", "DataFrames", "DocStringExtensions", "Libdl", "PetroBase", "Reexport", "Statistics"]
 path = "/home/scdyer/.julia/dev/JPerpleX"
 uuid = "47cd544e-370f-4714-8b6c-e3a83d4a5076"
 version = "1.0.0-DEV"
