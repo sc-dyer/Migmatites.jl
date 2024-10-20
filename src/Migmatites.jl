@@ -162,58 +162,73 @@ end
 
 
 
-# function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
-#     #Should define another function for multiple compositions at source
-#     #So that init_meemum does not need to be run a billion times
+function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+    #Should define another function for multiple compositions at source
+    #So that init_meemum does not need to be run a billion times
     
-#     #Need to run these in sequence,first calc melt system at T and P
-#     #Then get uH2O from that melt and calc host system for given uH2O
-#     #Complicated by how datafiles are defined
-#     scomp = init_meemum(sourcefile)
-#     if !isnothing(source_compo)
-#         scomp = source_compo
-#     end
+    #Need to run these in sequence,first calc melt system at T and P
+    #Then get uH2O from that melt and calc host system for given uH2O
+    #Complicated by how datafiles are defined
 
-#     Trange = range(source_T1, source_T2,steps)
-#     source_systems = PetroSystem[]
-#     melt_systems = PetroSystem[]
-#     for T in Trange
-#         ssys= minimizepoint(scomp,T,source_P,suppresswarn=suppresswarn)
-#         push!(source_systems, ssys)
-#         melt = get_melt(ssys)
-#         if mol(melt) ≈ 0
-#             println("No melt generated at ",source_T," °C and ", source_P, " bar with composition: ", compo)
-#             #Done to maintain array shapes
-#             push!(melt_systems,PetroSystem())
+    sourcelib = init_meemum(sourcefile)   
+    scomp = getcompo(sourcelib)
+    if !isnothing(source_compo)
+        scomp = source_compo
+    end
 
-#         else
-            
-           
-#             msys = minimizepoint(meltcompo,host_T,host_P,suppresswarn=suppresswarn)
-#             push!(melt_systems,msys)
-#         end
-#     end
+    Trange = range(source_T1, source_T2,steps)
+    source_systems = PetroSystem[]
+   
+    for T in Trange  
+        ssys= minimizepoint(sourcelib,T,source_P,suppresswarn=suppresswarn, composition = scomp)
+        push!(source_systems, ssys)
+    end
+
+    close_meemum!(sourcelib)
+
+    meltlib = init_meemum(meltfile)
+    melt_systems = PetroSystem[]
+    for ssys in source_systems
+        melt = get_melt(ssys)
+        if mol(melt) ≈ 0
+            println("No melt generated at ",source_T," °C and ", source_P, " bar with composition: ", ssys.composition)
+            #Done to maintain array shapes
+            push!(melt_systems,PetroSystem())
+        else
+            msys = minimizepoint(meltlib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+            push!(melt_systems,msys)
+        end
+    end
     
-#     #Have to calculate melt conditions at host T and P
-#     hcomp = init_meemum(hostfile)
-#     if !isnothing(host_compo)
-#         hcomp = host_compo
-#     end
-#     host_systems = PetroSystem[]
-#     for msys in melt_systems
+    close_meemum!(meltlib)
+
+
+    #Have to calculate melt conditions at host T and P
+    hostlib = init_meemum(hostfile)
+    hcomp = getcompo(hostlib)
+    if !isnothing(host_compo)
+        hcomp = host_compo
+    end
+    host_systems = PetroSystem[]
+    for msys in melt_systems 
        
-#         if length(msys.composition) > 0
-#             μ = getchemical(msys,equilib_component).μ
-#             hsys = minimizepoint(hcomp,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn)
-#             push!(host_systems,hsys)
-#         else
-#             push!(host_systems,PetroSystem())
-#         end
+        if length(msys.composition) > 0
+            index = findchemical(msys.composition,equilib_component)
+            if index > 0
+                μ = msys.composition[index].μ
+                hsys = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp)
+                push!(host_systems,hsys)
+            else
+                push!(host_systems,PetroSystem())
+            end
+        else
+            push!(host_systems,PetroSystem())
+        end
 
-#     end
+    end
+    close_meemum!(hostlib)
+    return source_systems,melt_systems, host_systems
 
-#     return source_systems,melt_systems, host_systems
-
-# end
+end
 
 end
