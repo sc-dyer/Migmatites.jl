@@ -16,28 +16,28 @@ using JPerpleX
     @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
     close_meemum!(hostlib)
 
-    source, melt, host = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Melt","23SD20A_melt-test1/Host",875,10000,800,9000)
+    source, melt, host = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Host",875,10000,800,9000)
 
-    sourcemelt = get_melt(source)
+    sourcemelt = getmelt(source)
     sourcemelth2o= getchemical(sourcemelt.composition,"H2O")
     @test round(sourcemelth2o.mol,digits=5) ≈ 0.40998
     @test round(sourcemelt.vol/source.vol * 100,digits=2) ≈ 6.89
     # @test sourcemelt.composition .≈ melt.composition
 
     melth2o = getchemical(melt.composition,"H2O")
-    @test round(melth2o.μ,sigdigits=6) ≈ -316241
+    @test round(melth2o.μ,sigdigits=6) ≈ -316240
     @test round(melth2o.mol,digits=5) ≈ 0.40998
     
     hosth2o = getchemical(host.composition,"H2O")
 
     @test round(hosth2o.mol,digits=3) ≈ 0.414
-    @test round(hosth2o.μ,sigdigits = 6) ≈ -316241
+    @test round(hosth2o.μ,sigdigits = 6) ≈ -316240
     @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
 
     #Test2
-    source, melt, host = equilibrate_open_system("23SD20A_melt-test2/MeltSource","23SD20A_melt-test1/Melt","23SD20A_melt-test2/Host",875,10000,800,9000)
+    source, melt, host = equilibrate_open_system("23SD20A_melt-test2/MeltSource","23SD20A_melt-test2/Host",875,10000,800,9000)
 
-    sourcemelt = get_melt(source)
+    sourcemelt = getmelt(source)
     sourcemelth2o= getchemical(sourcemelt.composition,"H2O")
     @test round(sourcemelth2o.mol,digits=5) ≈ 0.67574
     @test round(sourcemelt.vol/source.vol * 100,digits=2) ≈ 97.78
@@ -51,7 +51,7 @@ using JPerpleX
 
     @test round(hosth2o.mol,digits=3) ≈ 47.143
     @test round(hosth2o.μ,sigdigits=6) ≈ -311522
-    hostmelt = get_melt(host)
+    hostmelt = getmelt(host)
     @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 96.07
     hostmelth2o = getchemical(hostmelt.composition,"H2O")
     @test round(hostmelth2o.mol,digits=2) ≈ 0.67
@@ -68,31 +68,31 @@ using JPerpleX
     source_compo1 = change_list_component(source_compo,h2ostart,"H2O")
     source_compo2 = change_list_component(source_compo,h2oend,"H2O")
    
-    sources, melts, hosts = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Melt","23SD20A_melt-test1/Host",875,10000,800,9000,source_compo1,source_compo2, steps =10)
+    sources, melts, hosts = equilibrate_open_system("23SD20A_melt-test1/MeltSource","23SD20A_melt-test1/Host",875,10000,800,9000,source_compo1,source_compo2, steps =10)
 
     source = sources[1]
     melt = melts[1]
     host = hosts[1]
-    sourcemelt = get_melt(source)
+    sourcemelt = getmelt(source)
     sourcemelth2o= getchemical(sourcemelt.composition,"H2O")
     @test round(sourcemelth2o.mol,digits=5) ≈ 0.40998
     @test round(sourcemelt.vol/source.vol * 100,digits=2) ≈ 6.89
     # @test sourcemelt.composition .≈ melt.composition
 
     melth2o = getchemical(melt.composition,"H2O")
-    @test round(melth2o.μ,sigdigits=6) ≈ -316241
+    @test round(melth2o.μ,sigdigits=6) ≈ -316240
     @test round(melth2o.mol,digits=5) ≈ 0.40998
     
     hosth2o = getchemical(host.composition,"H2O")
 
     @test round(hosth2o.mol,digits=3) ≈ 0.414
-    @test round(hosth2o.μ,sigdigits = 6) ≈ -316241
+    @test round(hosth2o.μ,sigdigits = 6) ≈ -316240
     @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
 
     source = sources[10]
     melt = melts[10]
     host = hosts[10]
-    sourcemelt = get_melt(source)
+    sourcemelt = getmelt(source)
     sourcemelth2o= getchemical(sourcemelt.composition,"H2O")
     @test round(sourcemelth2o.mol,digits=5) ≈ 0.67574
     @test round(sourcemelt.vol/source.vol * 100,digits=2) ≈ 97.78
@@ -106,16 +106,16 @@ using JPerpleX
 
     @test round(hosth2o.mol,digits=3) ≈ 47.143
     @test round(hosth2o.μ,sigdigits=6) ≈ -311522
-    hostmelt = get_melt(host)
+    hostmelt = getmelt(host)
     @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 96.07
     hostmelth2o = getchemical(hostmelt.composition,"H2O")
     @test round(hostmelth2o.mol,digits=2) ≈ 0.67
 
 
 
-    sourcelib = init_meemum("23SD20A_melt-test1/MeltSource")
-    source_compo = getcompo(sourcelib)
-    close_meemum!(sourcelib)
+    # sourcelib = init_meemum("23SD20A_melt-test1/MeltSource")
+    # source_compo = getcompo(sourcelib)
+    # close_meemum!(sourcelib)
 
     # T_start = 850
     # T_end = 950
@@ -124,7 +124,7 @@ using JPerpleX
     # host_melt_percent = Float64[]
     # hostH2O = Float64[]
     # for host in hosts 
-    #     host_melt = get_melt(host)
+    #     host_melt = getmelt(host)
     #     push!(host_melt_percent,host_melt.vol/host.vol*100)
     #     h2oindex = findchemical(host.composition,"H2O")
     #     if h2oindex > 0
@@ -159,7 +159,7 @@ using JPerpleX
     # source_melt_percent = Float64[]
     # sourceH2O = Float64[]
     # for source in sources
-    #     source_melt = get_melt(source)
+    #     source_melt = getmelt(source)
     #     push!(source_melt_percent, source_melt.vol/source.vol*100)
     #     h2oindex = findchemical(source.composition,"H2O")
     #     if h2oindex > 0

@@ -1,7 +1,7 @@
 module Migmatites
 
 export
-    get_melt,
+    getmelt,
     equilibrate_open_system
 
 using
@@ -23,9 +23,9 @@ $(TYPEDSIGNATURES)
 Calculates the phase equilibria at specified T and P conditions for given composition and
 returns the melt phase in the calculated system. Must run init_meemum before running this function.
 """
-function get_melt(composition,T,P; suppresswarn = false)
+function getmelt(composition,T,P; suppresswarn = false)
     system = minimizepoint(composition, T, P, suppresswarn = suppresswarn)
-    return get_melt(system)
+    return getmelt(system)
 end
 
 """
@@ -34,13 +34,8 @@ $(TYPEDSIGNATURES)
 Returns the melt phase in a 'PetroSystem' if one exists, returns an empty phase with 0 mols of every component
 if no melt exists
 """
-function get_melt(system)
-    for phase in system.phases
-        if contains(lowercase(phase.name),"melt")
-            return phase
-        end
-    end
-    return Phase(name="Melt",composition = zero.(system.composition))
+function getmelt(system)
+    return getphase(system,"Melt")
 end
 
 """
@@ -53,7 +48,7 @@ the compositions defined in the given dat files: `sourcefile` and `hostfile`. Fo
 your sourcefile must have only P and T as independent variables, and your hostfile must have P, T and μ of 
 one component as independent variables.
 """
-function equilibrate_open_system(sourcefile,meltfile,hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
+function equilibrate_open_system(sourcefile,hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
 
@@ -67,20 +62,20 @@ function equilibrate_open_system(sourcefile,meltfile,hostfile,source_T,source_P,
     end
     source_system = minimizepoint(sourcelib,source_T,source_P,suppresswarn=suppresswarn, composition = scomp)
    
-    melt = get_melt(source_system)
+    melt = getmelt(source_system)
     if mol(melt) ≈ 0
         println("No melt generated at ",source_T," °C and ", source_P, " bar" )
         return
     end
 
-    close_meemum!(sourcelib)
+    # close_meemum!(sourcelib)
     #Have to calculate melt conditions at host T and P
-    meltlib = init_meemum(meltfile)
-    melt_system = minimizepoint(meltlib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+    # meltlib = init_meemum(meltfile)
+    melt_system = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
 
     μ = melt_system.composition[findchemical(melt_system.composition,equilib_component)].μ
     
-    close_meemum!(meltlib)
+    close_meemum!(sourcelib)
 
     hostlib = init_meemum(hostfile)
     hcomp = getcompo(hostlib)
@@ -94,8 +89,13 @@ function equilibrate_open_system(sourcefile,meltfile,hostfile,source_T,source_P,
     return source_system,melt_system, host_system
 
 end
+"""
+$(TYPEDSIGNATURES)
 
-function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+This does the same as the "single point" version of this function but provides a range of output for
+variable source compositions on a linear range between 'source_compo_start' and 'source_compo_end'.
+"""
+function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
     
@@ -113,23 +113,21 @@ function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T,source_P
         push!(source_systems, ssys)
     end
 
-    close_meemum!(sourcelib)
-
-    meltlib = init_meemum(meltfile)
+  
     melt_systems = PetroSystem[]
     for ssys in source_systems
-        melt = get_melt(ssys)
+        melt = getmelt(ssys)
         if mol(melt) ≈ 0
             println("No melt generated at ",source_T," °C and ", source_P, " bar with composition: ", ssys.composition)
             #Done to maintain array shapes
             push!(melt_systems,PetroSystem())
         else
-            msys = minimizepoint(meltlib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+            msys = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
             push!(melt_systems,msys)
         end
     end
     
-    close_meemum!(meltlib)
+    close_meemum!(sourcelib)
 
 
     #Have to calculate melt conditions at host T and P
@@ -160,9 +158,13 @@ function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T,source_P
 
 end
 
+"""
+$(TYPEDSIGNATURES)
 
-
-function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+This does the same as the "single point" version of this function but provides a range of output for
+variable source compositions on a linear range between 'source_T1' and 'source_T2'.
+"""
+function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
     
@@ -184,23 +186,21 @@ function equilibrate_open_system(sourcefile,meltfile, hostfile,source_T1, source
         push!(source_systems, ssys)
     end
 
-    close_meemum!(sourcelib)
-
-    meltlib = init_meemum(meltfile)
+    
     melt_systems = PetroSystem[]
     for ssys in source_systems
-        melt = get_melt(ssys)
+        melt = getmelt(ssys)
         if mol(melt) ≈ 0
             println("No melt generated at ",source_T," °C and ", source_P, " bar with composition: ", ssys.composition)
             #Done to maintain array shapes
             push!(melt_systems,PetroSystem())
         else
-            msys = minimizepoint(meltlib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+            msys = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
             push!(melt_systems,msys)
         end
     end
     
-    close_meemum!(meltlib)
+    close_meemum!(sourcelib)
 
 
     #Have to calculate melt conditions at host T and P
