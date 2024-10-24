@@ -35,7 +35,7 @@ Returns the melt phase in a 'PetroSystem' if one exists, returns an empty phase 
 if no melt exists
 """
 function getmelt(system)
-    return getphase(system,"Melt")
+    return getphase(system,r"melt")[1]
 end
 
 """
@@ -48,7 +48,7 @@ the compositions defined in the given dat files: `sourcefile` and `hostfile`. Fo
 your sourcefile must have only P and T as independent variables, and your hostfile must have P, T and μ of 
 one component as independent variables.
 """
-function equilibrate_open_system(sourcefile,hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false)
+function equilibrate_open_system(sourcefile,hostfile,source_T,source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, phasefunc = [])
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
 
@@ -60,7 +60,7 @@ function equilibrate_open_system(sourcefile,hostfile,source_T,source_P, host_T,h
     if !isnothing(source_compo)
         scomp = source_compo
     end
-    source_system = minimizepoint(sourcelib,source_T,source_P,suppresswarn=suppresswarn, composition = scomp)
+    source_system = minimizepoint(sourcelib,source_T,source_P,suppresswarn=suppresswarn, composition = scomp, phasefunc = phasefunc)
    
     melt = getmelt(source_system)
     if mol(melt) ≈ 0
@@ -71,7 +71,7 @@ function equilibrate_open_system(sourcefile,hostfile,source_T,source_P, host_T,h
     # close_meemum!(sourcelib)
     #Have to calculate melt conditions at host T and P
     # meltlib = init_meemum(meltfile)
-    melt_system = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+    melt_system = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition.*100, phasefunc = phasefunc)
 
     μ = melt_system.composition[findchemical(melt_system.composition,equilib_component)].μ
     
@@ -83,7 +83,7 @@ function equilibrate_open_system(sourcefile,hostfile,source_T,source_P, host_T,h
         hcomp = host_compo
     end
     
-    host_system = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp)
+    host_system = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp, phasefunc = phasefunc)
 
     close_meemum!(hostlib)
     return source_system,melt_system, host_system
@@ -95,7 +95,7 @@ $(TYPEDSIGNATURES)
 This does the same as the "single point" version of this function but provides a range of output for
 variable source compositions on a linear range between 'source_compo_start' and 'source_compo_end'.
 """
-function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,host_P, source_compo_start, source_compo_end; host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100, phasefunc = [])
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
     
@@ -109,7 +109,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,
    
     for compo in source_compo_range
         
-        ssys= minimizepoint(sourcelib,source_T,source_P,suppresswarn=suppresswarn, composition = compo)
+        ssys= minimizepoint(sourcelib,source_T,source_P,suppresswarn=suppresswarn, composition = compo, phasefunc = phasefunc)
         push!(source_systems, ssys)
     end
 
@@ -122,7 +122,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,
             #Done to maintain array shapes
             push!(melt_systems,PetroSystem())
         else
-            msys = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+            msys = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition.*100, phasefunc = phasefunc)
             push!(melt_systems,msys)
         end
     end
@@ -143,7 +143,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T,source_P, host_T,
             index = findchemical(msys.composition,equilib_component)
             if index > 0
                 μ = msys.composition[index].μ
-                hsys = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp)
+                hsys = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp, phasefunc = phasefunc)
                 push!(host_systems,hsys)
             else
                 push!(host_systems,PetroSystem())
@@ -164,7 +164,7 @@ $(TYPEDSIGNATURES)
 This does the same as the "single point" version of this function but provides a range of output for
 variable source compositions on a linear range between 'source_T1' and 'source_T2'.
 """
-function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100)
+function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, source_P, host_T,host_P;source_compo = nothing, host_compo = nothing,equilib_component = "H2O",suppresswarn = false, steps = 100, phasefunc = [])
     #Should define another function for multiple compositions at source
     #So that init_meemum does not need to be run a billion times
     
@@ -182,7 +182,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, sour
     source_systems = PetroSystem[]
    
     for T in Trange  
-        ssys= minimizepoint(sourcelib,T,source_P,suppresswarn=suppresswarn, composition = scomp)
+        ssys= minimizepoint(sourcelib,T,source_P,suppresswarn=suppresswarn, composition = scomp, phasefunc = phasefunc)
         push!(source_systems, ssys)
     end
 
@@ -195,7 +195,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, sour
             #Done to maintain array shapes
             push!(melt_systems,PetroSystem())
         else
-            msys = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition)
+            msys = minimizepoint(sourcelib,host_T,host_P,suppresswarn=suppresswarn,composition = melt.composition.*100, phasefunc = phasefunc)
             push!(melt_systems,msys)
         end
     end
@@ -216,7 +216,7 @@ function equilibrate_open_system(sourcefile, hostfile,source_T1, source_T2, sour
             index = findchemical(msys.composition,equilib_component)
             if index > 0
                 μ = msys.composition[index].μ
-                hsys = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp)
+                hsys = minimizepoint(hostlib,host_T,host_P,μ1 = μ,suppresswarn=suppresswarn,composition=hcomp, phasefunc = phasefunc)
                 push!(host_systems,hsys)
             else
                 push!(host_systems,PetroSystem())

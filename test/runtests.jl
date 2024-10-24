@@ -25,13 +25,13 @@ using JPerpleX
     # @test sourcemelt.composition .≈ melt.composition
 
     melth2o = getchemical(melt.composition,"H2O")
-    @test round(melth2o.μ,sigdigits=6) ≈ -316240
-    @test round(melth2o.mol,digits=5) ≈ 0.40998
+    @test round(melth2o.μ,sigdigits=6) ≈ -316239
+    @test round(melth2o.mol,digits=3) ≈ 40.998
     
     hosth2o = getchemical(host.composition,"H2O")
 
     @test round(hosth2o.mol,digits=3) ≈ 0.414
-    @test round(hosth2o.μ,sigdigits = 6) ≈ -316240
+    @test round(hosth2o.μ,sigdigits = 6) ≈ -316239
     @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
 
     #Test2
@@ -45,7 +45,7 @@ using JPerpleX
 
     melth2o = getchemical(melt.composition,"H2O")
     @test round(melth2o.μ,sigdigits=6) ≈ -311522
-    @test round(melth2o.mol,digits=5) ≈ 0.67574
+    @test round(melth2o.mol,digits=3) ≈ 67.574
     
     hosth2o = getchemical(host.composition,"H2O")
 
@@ -80,13 +80,13 @@ using JPerpleX
     # @test sourcemelt.composition .≈ melt.composition
 
     melth2o = getchemical(melt.composition,"H2O")
-    @test round(melth2o.μ,sigdigits=6) ≈ -316240
-    @test round(melth2o.mol,digits=5) ≈ 0.40998
+    @test round(melth2o.μ,sigdigits=6) ≈ -316239
+    @test round(melth2o.mol,digits=3) ≈ 40.998
     
     hosth2o = getchemical(host.composition,"H2O")
 
     @test round(hosth2o.mol,digits=3) ≈ 0.414
-    @test round(hosth2o.μ,sigdigits = 6) ≈ -316240
+    @test round(hosth2o.μ,sigdigits = 6) ≈ -316239
     @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
 
     source = sources[10]
@@ -100,7 +100,7 @@ using JPerpleX
 
     melth2o = getchemical(melt.composition,"H2O")
     @test round(melth2o.μ,sigdigits=6) ≈ -311522
-    @test round(melth2o.mol,digits=5) ≈ 0.67574
+    @test round(melth2o.mol,digits=3) ≈ 67.574
     
     hosth2o = getchemical(host.composition,"H2O")
 
@@ -113,6 +113,11 @@ using JPerpleX
 
 
 
+    fig = Figure(size = (600,450))
+    ax = Axis(fig[1,1])
+    phasemode!(ax,range(h2ostart,h2oend,10),hosts)
+    fig[1,2] = Legend(fig,ax)
+    save("23SD20A_melt-test1/Host.svg",fig)
     # sourcelib = init_meemum("23SD20A_melt-test1/MeltSource")
     # source_compo = getcompo(sourcelib)
     # close_meemum!(sourcelib)
