@@ -253,63 +253,7 @@ function equilibrate_closed_system(meemumlib,sourcecompo,hostcompo,source_T,sour
         return
     end
 
-    # melt_system = minimizepoint(meemumlib,host_T,host_P,composition = melt.composition.*100, suppresswarn = suppresswarn, phasefunc = phasefunc)
-    # host_system = minimizepoint(meemumlib,host_T,host_P,composition = hostcompo, suppresswarn = suppresswarn, phasefunc = phasefunc)
-
-    # μ_melt = melt_system.composition[findchemical(melt_system.composition,equilib_component)].μ
-    # μ_host = host_system.composition[findchemical(host_system.composition,equilib_component)].μ
-
-    # if μ_melt < μ_host
-    #     println("Host μ is higher than melt μ")
-    #     return source_system,melt_system, host_system
-    # end
     
-    
-    # count = 1
-    
-    # x_change = 0.001
-    # if molfrac(melt_system.composition,equilib_component) > 0.15
-    #     x_change = 0.01
-    # end
-    
-    # # melt_system, host_system = recursive_equilibrate(sourcelib,melt.composition,hcomp,melt_proportion,host_T, host_P,equilib_component=equilib_component,suppresswarn=suppresswarn,phasefunc=phasefunc)
-    # while abs(μ_melt - μ_host) >μthreshold && molfrac(melt_system.composition,equilib_component) > xthreshold && abs(x_change) > 1e-9 && count < 100
-    #     println("Loop ", count)
-    #     # x_change = molfrac(melt_system.composition,equilib_component)/divisor
-    #     @show x_change
-    #     newmeltcompo, newhostcompo = balance_component(melt_system.composition,host_system.composition,equilib_component,x_change,melt_proportion)
-    #     chemi = findchemical(newmeltcompo,equilib_component)
-    #     chemj = findchemical(newhostcompo,equilib_component)
-    #     if chemi > 0 && chemj > 0
-    #         newmelt_system = minimizepoint(meemumlib,host_T,host_P,composition = newmeltcompo, suppresswarn = suppresswarn, phasefunc = phasefunc)
-    #         newhost_system = minimizepoint(meemumlib,host_T,host_P,composition = newhostcompo, suppresswarn = suppresswarn, phasefunc = phasefunc)
-    #         nμ_melt = getchemical(newmelt_system.composition,equilib_component).μ
-    #         nμ_host = getchemical(newhost_system.composition,equilib_component).μ
-            
-    #         if abs(nμ_melt-nμ_host) > abs(μ_melt-μ_host)
-    #             x_change /= 10
-    #         else
-    #             if (nμ_melt - nμ_host)/x_change < 0
-    #                 x_change /= -10
-    #             end
-    #             melt_system = newmelt_system
-    #             host_system = newhost_system
-    #             μ_melt = nμ_melt
-    #             μ_host = nμ_host
-            
-    #             Xh2o_melt = molfrac(melt_system.composition,equilib_component)
-    #             Xh2o_host = molfrac(host_system.composition,equilib_component)
-                
-    #             @show μ_host, μ_melt
-    #             @show Xh2o_host, Xh2o_melt
-    #         end
-            
-    #     else
-    #         x_change /= 10
-    #     end
-    #     count +=1
-    # end
-
     
     meltcompo = melt.composition.*100
     res = optimize(x -> closed_system_optim(meemumlib,melt.composition,hostcompo,host_T,host_P,melt_proportion,x[1],equilib_component=equilib_component,suppresswarn=suppresswarn,phasefunc=phasefunc),[0.0])
