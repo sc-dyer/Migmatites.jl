@@ -139,19 +139,20 @@ using JPerpleX
         
         sourcemelt = getmelt(source)
         sourcemelth2o= getchemical(sourcemelt.composition,"H2O")
-        @test round(sourcemelth2o.mol,digits=5) ≈ 0.40998
-        @test round(sourcemelt.vol/source.vol * 100,digits=2) ≈ 6.89
+        @test round(sourcemelth2o.mol,digits=5) ≈ 0.46122
+        @test round(sourcemelt.vol/source.vol * 100,digits=2) ≈ 96.65
         # @test sourcemelt.composition .≈ melt.composition
-
+        
         melth2o = getchemical(melt.composition,"H2O")
-        @test round(melth2o.μ,sigdigits=6) ≈ -316239
-        @test round(melth2o.mol,digits=3) ≈ 40.998
+        @test round(melth2o.μ,sigdigits=6) ≈ -316161
+        @test round(melth2o.mol,digits=3) ≈ 44.515
         
         hosth2o = getchemical(host.composition,"H2O")
 
-        @test round(hosth2o.mol,digits=3) ≈ 0.414
-        @test round(hosth2o.μ,sigdigits = 6) ≈ -316239
-        @test round(host.phases[1].vol/host.vol*100,digits=2) ≈ 5.15
+        @test round(hosth2o.mol,digits=3) ≈ 1.324
+        @test round(hosth2o.μ,sigdigits = 6) ≈ -316143
+        hostmelt = getmelt(host)
+        @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 5.22
 
         h2ostart = 1.0
         h2oend = 50.0
@@ -160,7 +161,7 @@ using JPerpleX
         source_compo2 = change_list_component(sourcecompo,h2oend,"H2O")
 
         sourcecomporange = range(source_compo1,source_compo2,10)
-        @show sourcecomporange
+      
         systems = equilibrate_closed_system.(fill(sourcelib,10),sourcecomporange,fill(hostcompo,10),875,10000,800,9000,2.0)
        
         source = systems[10][1]
@@ -173,17 +174,17 @@ using JPerpleX
         # @test sourcemelt.composition .≈ melt.composition
 
         melth2o = getchemical(melt.composition,"H2O")
-        @test round(melth2o.μ,sigdigits=6) ≈ -311522
-        @test round(melth2o.mol,digits=3) ≈ 67.574
+        @test round(melth2o.μ,sigdigits=6) ≈ -314459
+        @test round(melth2o.mol,digits=3) ≈ 39.14
         
         hosth2o = getchemical(host.composition,"H2O")
 
-        @test round(hosth2o.mol,digits=3) ≈ 47.143
-        @test round(hosth2o.μ,sigdigits=6) ≈ -311522
+        @test round(hosth2o.mol,digits=3) ≈ 28.901
+        @test round(hosth2o.μ,sigdigits=6) ≈ -314459
         hostmelt = getmelt(host)
-        @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 96.07
+        @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 95.26
         hostmelth2o = getchemical(hostmelt.composition,"H2O")
-        @test round(hostmelth2o.mol,digits=2) ≈ 0.67
+        @test round(hostmelth2o.mol,digits=2) ≈ 0.55
 
         hosts = [sys[3] for sys in systems]
         fig = Figure(size = (600,450))
