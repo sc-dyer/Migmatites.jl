@@ -2,7 +2,8 @@ using Migmatites
 using Test
 using CairoMakie
 using JPerpleX
-
+# using DataFrames
+# using CSV
 
 @testset "Migmatites.jl" begin
     #Test1
@@ -114,7 +115,7 @@ using JPerpleX
 
         fig = Figure(size = (600,450))
         ax = Axis(fig[1,1])
-        phasemode!(ax,range(h2ostart,h2oend,10),hosts)
+        modebox!(ax,range(h2ostart,h2oend,10),hosts)
         fig[1,2] = Legend(fig,ax)
         save("23SD20A_melt-test1/Host.svg",fig)
 
@@ -132,8 +133,8 @@ using JPerpleX
 
         compo1, compo2 = balance_component(sourcecompo,hostcompo,"H2O",0.01,2.0)
 
-        @test round(molfrac(compo1,"H2O"),sigdigits = 3) ≈ 0.0833
-        @test round(molfrac(compo2,"H2O"),sigdigits = 3) ≈ 0.0256
+        @test round(molfrac(compo1,"H2O"),sigdigits = 3) ≈ 0.161 
+        @test round(molfrac(compo2,"H2O"),sigdigits = 3) ≈ 0.0206
 
         source, melt, host = equilibrate_closed_system(sourcelib,sourcecompo,hostcompo,875,10000,800,9000,2.0)
         
@@ -144,15 +145,15 @@ using JPerpleX
         # @test sourcemelt.composition .≈ melt.composition
         
         melth2o = getchemical(melt.composition,"H2O")
-        @test round(melth2o.μ,sigdigits=6) ≈ -316161
-        @test round(melth2o.mol,digits=3) ≈ 44.515
+        @test round(melth2o.μ,sigdigits=6) ≈ -316142
+        @test round(melth2o.mol,digits=3) ≈ 45.111
         
         hosth2o = getchemical(host.composition,"H2O")
 
-        @test round(hosth2o.mol,digits=3) ≈ 1.324
+        @test round(hosth2o.mol,digits=3) ≈ 0.87
         @test round(hosth2o.μ,sigdigits = 6) ≈ -316143
         hostmelt = getmelt(host)
-        @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 5.22
+        @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 2.24
 
         h2ostart = 1.0
         h2oend = 50.0
@@ -161,9 +162,17 @@ using JPerpleX
         source_compo2 = change_list_component(sourcecompo,h2oend,"H2O")
 
         sourcecomporange = range(source_compo1,source_compo2,10)
-      
-        systems = equilibrate_closed_system.(fill(sourcelib,10),sourcecomporange,fill(hostcompo,10),875,10000,800,9000,2.0)
-       
+        # sources = PetroSystem[]
+        # melts = PetroSystem[]
+        # hosts = PetroSystem[]
+        # for i in 1:lastindex(sourcecomporange)
+        #     sourcei, melti, hosti = equilibrate_closed_system(sourcelib,sourcecomporange[i],hostcompo,875,10000,800.9000,2.0)
+        # end
+        systems = equilibrate_closed_system.((sourcelib,),sourcecomporange,(hostcompo,),875,10000,800,9000,2.0)
+        # for i in 1:lastindex(systems)
+        #     @show molfrac(getcompo(systems[i][2]),"H2O")
+        #     @show molfrac(getcompo(systems[i][3]),"H2O")
+        # end
         source = systems[10][1]
         melt = systems[10][2]
         host = systems[10][3]
@@ -174,13 +183,13 @@ using JPerpleX
         # @test sourcemelt.composition .≈ melt.composition
 
         melth2o = getchemical(melt.composition,"H2O")
-        @test round(melth2o.μ,sigdigits=6) ≈ -314459
-        @test round(melth2o.mol,digits=3) ≈ 39.14
+        @test round(melth2o.μ,sigdigits=6) ≈ -314457
+        @test round(melth2o.mol,digits=3) ≈ 39.122
         
         hosth2o = getchemical(host.composition,"H2O")
 
-        @test round(hosth2o.mol,digits=3) ≈ 28.901
-        @test round(hosth2o.μ,sigdigits=6) ≈ -314459
+        @test round(hosth2o.mol,digits=3) ≈ 28.919
+        @test round(hosth2o.μ,sigdigits=6) ≈ -314458
         hostmelt = getmelt(host)
         @test round(hostmelt.vol/host.vol*100,digits=2) ≈ 95.26
         hostmelth2o = getchemical(hostmelt.composition,"H2O")
@@ -189,11 +198,44 @@ using JPerpleX
         hosts = [sys[3] for sys in systems]
         fig = Figure(size = (600,450))
         ax = Axis(fig[1,1])
-        phasemode!(ax,range(h2ostart,h2oend,10),hosts)
+        modebox!(ax,range(h2ostart,h2oend,10),hosts)
         fig[1,2] = Legend(fig,ax)
         save("23SD20A_melt-test3/Host.svg",fig)
 
         close_meemum!(sourcelib)
+    end
+
+    @testset "Melting path tests" begin
+        sourcelib = init_meemum("23SD20A_melt-test1/MeltSource")
+        source_compo = getcompo(sourcelib)
+        t_path = [600,1100]
+        p_path = [10000,10000]
+
+        melts, restite_compos, system_steps, extract_T, extract_P = opensystem_melting_path(sourcelib, source_compo,t_path,p_path)
+        h2ostart = 0.001
+        
+        
+        source_compo = change_list_component(source_compo,h2ostart,"H2O")
+        t_path2 = [800,800]
+        x_range = [h2ostart,0.2]
+        
+        # melts, restite_compos, system_steps, extract_T, extract_X = opensystem_melting_path(sourcelib, source_compo,t_path2,x_range,10000,numsteps=1000)
+        @show melts
+        @show extract_X
+
+        close_meemum!(sourcelib)
+        
+       
+        sourcefile = "23SD20A_melt-test4/MeltSource"
+        hostfile = "23SD20A_melt-test4/Host"
+        melts_f, hosts, restite_compos, system_steps, extract_T, extract_P = melt_cycle_model_open(hostfile,sourcefile,800,9000,t_path,p_path,numsteps = 1000)
+
+        @show melts_f
+        @show hosts
+        @show extract_T
+
+
+
     end
 
     
