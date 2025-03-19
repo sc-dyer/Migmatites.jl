@@ -1,3 +1,10 @@
+"""
+This is a package for working with and modelling Migmatites, depending on the JPerpleX package. This includes some basic
+functionality for calculating trace element partitioning.
+
+# Exports
+$(EXPORTS)
+"""
 module Migmatites
 
 export
@@ -7,12 +14,17 @@ export
     balance_component,
     gridcalc,
     opensystem_melting_path,
-    melt_cycle_model_open
-
+    melt_cycle_model_open,
+    #Following is in partitioning.jl
+    zircon_saturation,
+    import_Kd_values,
+    calc_Zr!,
+    calc_zircon!,
+    ZR
 using
     DocStringExtensions,
-    JPerpleX
-
+    JPerpleX,
+    CSV
 #Function that takes a PetroSystem and calculates u_H2O for given P-T-X_H2O conditions
 
 #(Open system calculation) Function that calculates X_H2O required for given u_H2O -> Investigate if this is possible with Perple_X
@@ -262,7 +274,7 @@ function equilibrate_closed_system(meemumlib,sourcecompo,hostcompo,source_T,sour
     lowerlimit = -molfrac(hostcompo,equilib_component)/melt_proportion
     
     upperlimit = molfrac(meltcompo,equilib_component)
-    @show getchemical(sourcecompo,equilib_component).mol
+   
     x_change = dumbsolve(x -> closed_system_optim(meemumlib,meltcompo,hostcompo,host_T,host_P,
                                             melt_proportion,x,equilib_component=equilib_component,
                                             suppresswarn=suppresswarn,phasefunc=phasefunc),lowerlimit,upperlimit,ftol = μthreshold, xtol = xthreshold)
@@ -594,5 +606,9 @@ function melt_cycle_model_open(hostfile, sourcefile, host_T, host_P, t_path, p_p
         return [], [], [], system_steps, [], []
     end
 end
+
+
+include("Partitioning.jl")
+
 
 end

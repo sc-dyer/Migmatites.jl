@@ -4,9 +4,11 @@ authors = ["scdyer <scdyer@uwaterloo.ca> and contributors"]
 version = "0.0.1"
 
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 JPerpleX = "47cd544e-370f-4714-8b6c-e3a83d4a5076"
 
 [compat]
+CSV = "0.10.15"
 DocStringExtensions = "0.9.3"
 julia = "1.6.7"
